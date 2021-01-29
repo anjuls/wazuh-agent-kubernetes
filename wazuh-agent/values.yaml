@@ -1,0 +1,12 @@
+# Default values for wazuh-agent.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace: wazuh-test
+
+image:
+  name: anjuls/wazuh-installer:1.0
+  pullPolicy: Always
+
+manager_ip: "10.0.0.1"
+worker_ip:  "10.0.0.2"

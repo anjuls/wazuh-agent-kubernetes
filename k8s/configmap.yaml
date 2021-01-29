@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wazuh-installer-config
+  namespace: wazuh
+data:
+  install.sh: |
+    #/bin/bash
+    # add repo
+    rpm --import https://packages.wazuh.com/key/GPG-KEY-WAZUH
+    cat > /etc/yum.repos.d/wazuh.repo << EOF
+    [wazuh]
+    gpgcheck=1
+    gpgkey=https://packages.wazuh.com/key/GPG-KEY-WAZUH
+    enabled=1
+    name=EL-$releasever - Wazuh
+    baseurl=https://packages.wazuh.com/4.x/yum/
+    protect=1
+    EOF
+    # remove previous agent 
+    yum remove -y wazuh-agent 
+    # install
+    yum install -y wazuh-agent
+    echo "copying ossec files"
+    cp /var/ossec.conf /var/authd.pass /var/ossec/etc/
+    sed -i "s/WORKER_IP/$WORKER_IP/g" /var/ossec/etc/ossec.conf
+    /var/ossec/bin/agent-auth -m $MANAGER_IP
+    # reload
+    systemctl daemon-reload
+    systemctl enable wazuh-agent
+    systemctl start wazuh-agent
+    # disable automatic upgrade
+    sed -i "s/^enabled=1/enabled=0/" /etc/yum.repos.d/wazuh.repo
+    # wazuh manager status
+    /var/ossec/bin/ossec-control status

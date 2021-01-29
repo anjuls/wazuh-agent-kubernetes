@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: wazuh-installer
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    matchLabels:
+      job: wazuh-installer
+  template:
+    metadata:
+      labels:
+        job: wazuh-installer
+    spec:
+      hostPID: true
+      restartPolicy: Always
+      containers:
+      - image: {{ .Values.image.name }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        name: wazuh-installer
+        env:
+          - name: WORKER_IP
+            value: {{ .Values.worker_ip }}
+          - name: MANAGER_IP
+            value: {{ .Values.manager_ip }}
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: install-script
+          mountPath: /tmp
+        - name: host-mount
+          mountPath: /host
+      volumes:
+      - name: install-script
+        configMap:
+          name: wazuh-installer-config
+      - name: host-mount
+        hostPath:
+          path: /var
